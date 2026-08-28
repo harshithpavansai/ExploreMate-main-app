@@ -1,0 +1,292 @@
+# ExploreMate — Ocean Blue Redesign + Database Backend Plan
+
+## Overview
+
+This plan covers three major deliverables:
+1. **UI Redesign** — Full ocean-blue (#439F9D) colour palette applied to every screen
+2. **Database Implementation Plan** — Architecture & schema for Firebase Firestore backend
+3. **Backend Completion** — Services, models, and wired data layer across all screens
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> The app currently has **no backend at all** — everything is hardcoded static data. The plan below adds Firebase (Firestore + Auth) as the backend, which requires you to create a Firebase project and drop in `google-services.json`. Let us know if you prefer a **local SQLite** backend instead and we will adjust.
+
+> [!WARNING]
+> All `screens/` files live **outside** `lib/` (they are at the project root). This is non-standard Flutter layout but we will respect the existing structure and not move files.
+
+---
+
+## Phase 1 — Ocean Blue Colour Palette (`#439F9D`)
+
+### Proposed Colour Tokens
+
+| Token | Hex | Usage |
+|---|---|---|
+| `primary` | `#439F9D` | Buttons, icons, nav active, chips |
+| `primaryDark` | `#2D7F7D` | AppBar, drawer header, cards |
+| `primaryDeep` | `#1A5E5C` | Splash bg, drawer bg |
+| `accent` | `#7ECFC2` | XP bar, avatar bg, highlights |
+| `accentLight` | `#B5E5DF` | Tile bg, border colour |
+| `surface` | `#F0FAFA` | Page backgrounds |
+| `tileLight1` | `#E0F5F3` | Icon tiles, chips bg |
+| `tileLight2` | `#D4EFEC` | Secondary tiles |
+| `tileLight3` | `#C8EAE7` | Tertiary tiles |
+| `gemOcean1` | `#1B5E5C` | Gem card 1 |
+| `gemOcean2` | `#2D7F7D` | Gem card 2 |
+| `gemOcean3` | `#0D4A48` | Gem card 3 |
+| `textDark` | `#0D2826` | Body text |
+| `textMid` | `#2D7F7D` | Subtext, labels |
+| `textMuted` | `#8AB8B6` | Placeholder, muted |
+| `borderColor` | `#B5E5DF` | Card borders |
+
+### Files Changed for UI
+
+#### [MODIFY] [app_colors.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/lib/app_colors.dart)
+Replace all green/teal tokens with ocean-blue equivalents.
+
+#### [MODIFY] [main.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/lib/main.dart)
+Update `ColorScheme.fromSeed` seed & primary colours, add `GoogleFonts.poppins` theme, richer `ThemeData`.
+
+#### [MODIFY] [screens/splash_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/splash_screen.dart)
+Ocean-blue linear gradient background, animated wave rings.
+
+#### [MODIFY] [screens/home_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/home_screen.dart)
+All `AppColors.*` references automatically updated; map ocean gradient to gem cards.
+
+#### [MODIFY] [screens/explore_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/explore_screen.dart)
+Map placeholder gets ocean tint, list tiles updated.
+
+#### [MODIFY] [screens/ai_assist_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/ai_assist_screen.dart)
+Chat bubbles, typing indicator, input bars — all updated to ocean palette.
+
+#### [MODIFY] [screens/trip_scheduler_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/trip_scheduler_screen.dart)
+Day selector, timeline dots, summary cards — all updated.
+
+#### [MODIFY] [screens/translator_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/translator_screen.dart)
+Mode tabs, language dropdowns, output card — all updated.
+
+#### [MODIFY] [screens/food_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/food_screen.dart)
+Cards and chips updated.
+
+#### [MODIFY] [screens/game_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/game_screen.dart)
+XP rewards, badge colours updated.
+
+#### [MODIFY] [screens/hidden_gems_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/hidden_gems_screen.dart)
+Gem cards updated.
+
+#### [MODIFY] [screens/audio_tour_screen.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/screens/audio_tour_screen.dart)
+Player controls updated.
+
+#### [MODIFY] [widgets/app_drawer.dart](file:///c:/Users/SLIM3/OneDrive/Desktop/ExploreMate/widgets/app_drawer.dart)
+Drawer header, item badges, section labels updated.
+
+---
+
+## Phase 2 — Database Architecture (Firebase Firestore)
+
+```mermaid
+erDiagram
+    users {
+      string uid PK
+      string name
+      string email
+      string avatarUrl
+      int    level
+      int    xp
+      timestamp createdAt
+    }
+    places {
+      string placeId PK
+      string name
+      string type
+      string tag
+      double lat
+      double lng
+      double distKm
+      string iconCode
+      bool   isHiddenGem
+    }
+    trips {
+      string tripId PK
+      string userId FK
+      string destination
+      date   startDate
+      date   endDate
+      timestamp createdAt
+    }
+    trip_stops {
+      string stopId PK
+      string tripId FK
+      string placeId FK
+      string timeSlot
+      int    dayIndex
+      string durationLabel
+      int    order
+    }
+    food_items {
+      string foodId PK
+      string name
+      string category
+      string cuisine
+      double rating
+      string placeId FK
+    }
+    translations {
+      string id PK
+      string userId FK
+      string sourceText
+      string translatedText
+      string fromLang
+      string toLang
+      timestamp savedAt
+    }
+    audio_tours {
+      string tourId PK
+      string placeId FK
+      string language
+      int    durationSec
+      string audioUrl
+    }
+    user_progress {
+      string userId FK
+      string placeId FK
+      bool   visited
+      int    xpEarned
+      timestamp visitedAt
+    }
+
+    users ||--o{ trips : "creates"
+    trips ||--|{ trip_stops : "has"
+    trip_stops }o--|| places : "visits"
+    places ||--o{ food_items : "serves"
+    places ||--o{ audio_tours : "has"
+    users ||--o{ translations : "saves"
+    users ||--o{ user_progress : "tracks"
+```
+
+### Firestore Collections
+
+| Collection | Document Key | Notes |
+|---|---|---|
+| `users` | Firebase Auth UID | Profile, XP, level |
+| `places` | Auto ID | All POIs |
+| `trips` | Auto ID | User-created trips |
+| `tripStops` | Auto ID | Sub-collection or top-level |
+| `foodItems` | Auto ID | Restaurants & street food |
+| `translations` | Auto ID | User translation history |
+| `audioTours` | Auto ID | Tour metadata (audio on Storage) |
+| `userProgress` | `uid_placeId` composite | Visited flag + XP |
+
+---
+
+## Phase 3 — Backend Services & Models
+
+### New Files
+
+#### [NEW] lib/models/user_model.dart
+`UserModel` with `fromFirestore` / `toMap`.
+
+#### [NEW] lib/models/place_model.dart
+`PlaceModel` — name, type, tag, lat, lng, isHiddenGem.
+
+#### [NEW] lib/models/trip_model.dart
+`TripModel` and `TripStopModel`.
+
+#### [NEW] lib/models/food_model.dart
+`FoodItemModel` with category + rating.
+
+#### [NEW] lib/models/translation_model.dart
+`TranslationModel` for history.
+
+#### [NEW] lib/models/audio_tour_model.dart
+`AudioTourModel` with duration and URL.
+
+#### [NEW] lib/services/auth_service.dart
+- `signIn(email, password)` → Firebase Auth  
+- `signUp(email, password, name)` → creates `users` doc  
+- `signOut()`  
+- `currentUser` stream
+
+#### [NEW] lib/services/place_service.dart
+- `getPlaces({bool gemsOnly})` → Firestore query  
+- `searchPlaces(String query)` → simple filter  
+- `markVisited(placeId)` → updates `userProgress`
+
+#### [NEW] lib/services/trip_service.dart
+- `getTrips(userId)` → list of trips  
+- `createTrip(TripModel)` → Firestore add  
+- `addStop(tripId, TripStopModel)` → Firestore add  
+- `deleteStop(stopId)` → Firestore delete
+
+#### [NEW] lib/services/food_service.dart
+- `getFoodItems({String? category})` → Firestore query
+
+#### [NEW] lib/services/translator_service.dart
+- `translate(text, from, to)` → mock / Google Translate API call  
+- `saveHistory(TranslationModel)` → Firestore add
+
+#### [NEW] lib/services/audio_tour_service.dart
+- `getToursForPlace(placeId)` → Firestore query  
+- `getAudioUrl(tourId)` → Firebase Storage URL
+
+#### [NEW] lib/services/user_service.dart
+- `getUserProfile(uid)` → Firestore read  
+- `updateXP(uid, int delta)` → Firestore update  
+- `getLeaderboard()` → ordered query
+
+### Modified Screens (wiring data)
+
+All screens currently show **hardcoded lists**. After backend integration:  
+- `ExploreScreen` → `PlaceService.getPlaces()`  
+- `HomeScreen._HomeTab` → `PlaceService.getPlaces(gemsOnly: true)` + `UserService.getUserProfile()`  
+- `FoodScreen` → `FoodService.getFoodItems()`  
+- `TripSchedulerScreen` → `TripService.getTrips()` + `TripService.addStop()`  
+- `TranslatorScreen` → `TranslatorService.translate()` + `TranslatorService.saveHistory()`  
+- `AudioTourScreen` → `AudioTourService.getToursForPlace()`  
+- `HiddenGemsScreen` → `PlaceService.getPlaces(gemsOnly: true)`  
+- `GameScreen` → `UserService.getLeaderboard()`  
+- `AiAssistScreen` → stays stub (future Gemini API)
+
+---
+
+## pubspec.yaml Additions
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.2
+  google_fonts: ^6.2.1
+  provider: ^6.1.2          # state management
+  cached_network_image: ^3.4.1
+```
+
+---
+
+## Verification Plan
+
+### Automated
+- `flutter analyze` — zero lint errors
+- `flutter build apk --debug` — clean build
+
+### Manual
+- Hot reload confirms colour changes across all screens
+- Drawer navigation works to all 8 screens
+- Firestore queries return data (seeded from admin console)
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> Do you have an existing Firebase project, or should we generate setup instructions to create one?
+
+> [!NOTE]
+> Do you want Firebase Auth (email/password) or a guest-only mode for now? We can add a Login screen if needed.

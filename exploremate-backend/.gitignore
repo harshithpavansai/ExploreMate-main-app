@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+.env.production
+firebase-service-account.json
+logs/
+*.log
+coverage/
+dist/
+.DS_Store
+.idea/
+.vscode/
+uploads/
+tmp/

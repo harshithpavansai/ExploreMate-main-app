@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "792157576621",
+    "project_id": "exploremate-123",
+    "storage_bucket": "exploremate-123.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792157576621:android:4ceb11588e96680e3c1524",
+        "android_client_info": {
+          "package_name": "com.example.exploremate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGg2s3Wku79ipmlenUybNBqq3dldVPWyQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
